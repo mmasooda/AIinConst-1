@@ -3,14 +3,16 @@ import random
 import io
 import json
 import os
+import re
 from dataclasses import dataclass
 
 from typing import List, Tuple
 
 import numpy as np
 from PIL import Image, ImageDraw
-import openai
 
+import pytesseract
+import openai
 
 @dataclass
 class Room:
@@ -29,7 +31,13 @@ def extract_plot_metrics(
     unit: str = "meters",
     pixels_per_unit: int = 100,
 ) -> Tuple[float, float, float]:
-    """Return (width_m, height_m, area_m2) from an image mask."""
+
+    """
+    Return ``(width_m, height_m, area_m2)`` from text in the image or from the
+    pixel mask when no dimensions are written. Values are always returned in
+    meters.
+    """
+
 
     width_px, height_px = image.size
     width = width_px / pixels_per_unit
@@ -40,6 +48,25 @@ def extract_plot_metrics(
     mask = arr < 250
     area_px = mask.sum()
     area = area_px / (pixels_per_unit ** 2)
+
+
+    # Try OCR to find dimensions written on the plan
+    try:
+        text = pytesseract.image_to_string(image)
+        pattern = r"(\d+(?:\.\d+)?)\s*(ft|feet|m|meter|meters)"
+        matches = re.findall(pattern, text, flags=re.I)
+        values = []
+        for num, units in matches:
+            val = float(num)
+            if units.lower().startswith("ft") or units.lower().startswith("feet"):
+                val *= 0.3048
+            values.append(val)
+        if len(values) >= 2:
+            width, height = values[0], values[1]
+            area = width * height
+    except Exception:
+        pass
+
 
     if unit == "feet":
         width *= 0.3048
@@ -141,8 +168,10 @@ def generate_plan_with_openai(
 
 def plan_to_image(plan: FloorPlan, cell_size: int = 40) -> Image:
     """Convert a FloorPlan into a simple PIL Image drawing."""
-    width = max(r.x + r.width for r in plan.rooms) * cell_size
-    height = max(r.y + r.height for r in plan.rooms) * cell_size
+
+    width = int(max(r.x + r.width for r in plan.rooms) * cell_size)
+    height = int(max(r.y + r.height for r in plan.rooms) * cell_size)
+
     img = Image.new("RGB", (width, height), "white")
     draw = ImageDraw.Draw(img)
     for room in plan.rooms:

@@ -6,4 +6,5 @@ Shapely
 
 openai
 numpy
+pytesseract
 
