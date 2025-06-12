@@ -1,8 +1,11 @@
 import random
 import io
+import json
+import os
 from dataclasses import dataclass
 from typing import List
 from PIL import Image, ImageDraw
+import openai
 
 @dataclass
 class Room:
@@ -65,6 +68,39 @@ def generate_random_plan(plot_width: int = 20, plot_height: int = 20, num_rooms:
         rooms.remove(room)
         rooms.extend(split_room(room))
 
+    return FloorPlan(rooms=rooms)
+
+
+def generate_plan_with_openai(
+    plot_width: int,
+    plot_height: int,
+    num_rooms: int,
+    building_type: str,
+) -> FloorPlan:
+    """Use GPT-4o via OpenAI API to generate a floor plan."""
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY environment variable not set")
+
+    openai.api_key = api_key
+
+    prompt = (
+        "Generate a JSON floor plan with a list of rooms. "
+        f"Plot width: {plot_width}, height: {plot_height}. "
+        f"Building type: {building_type}. Room count: {num_rooms}. "
+        "Each room should have x, y, width, and height in meters."
+    )
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": prompt}],
+    )
+    text = response["choices"][0]["message"]["content"].strip()
+    data = json.loads(text)
+
+    rooms = [
+        Room(r["x"], r["y"], r["width"], r["height"]) for r in data.get("rooms", [])
+    ]
     return FloorPlan(rooms=rooms)
 
 

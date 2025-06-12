@@ -4,7 +4,12 @@ from pdf2image import convert_from_path
 import ifcopenshell
 import io
 
-from floorplan_generator import generate_random_plan, plan_to_image, plans_to_pdf
+from floorplan_generator import (
+    generate_random_plan,
+    generate_plan_with_openai,
+    plan_to_image,
+    plans_to_pdf,
+)
 
 st.title("AI Floorplan Assistant")
 
@@ -78,6 +83,9 @@ else:  # office
     floors = st.number_input("Number of floors", 1, 50, 10)
     questions.append(("floors", floors))
 
+# Option to use GPT-4o via OpenAI API
+use_gpt = st.checkbox("Use GPT-4o for plan generation")
+
 if st.button("Generate floor plan options"):
     # crude estimate of rooms based on building type inputs
     if building_type == "villa":
@@ -91,9 +99,14 @@ if st.button("Generate floor plan options"):
     else:
         room_count = 10
 
-    plans = [
-        generate_random_plan(plot_width, plot_height, room_count) for _ in range(3)
-    ]
+    if use_gpt:
+        generator = lambda: generate_plan_with_openai(
+            plot_width, plot_height, room_count, building_type
+        )
+    else:
+        generator = lambda: generate_random_plan(plot_width, plot_height, room_count)
+
+    plans = [generator() for _ in range(3)]
     images = []
     for idx, plan in enumerate(plans, 1):
         st.subheader(f"Option {idx}")
