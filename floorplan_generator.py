@@ -82,7 +82,7 @@ def generate_plan_with_openai(
 ) -> FloorPlan:
     """Use GPT-4o via OpenAI API to generate a floor plan."""
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    api_key = os.getenv("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")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
