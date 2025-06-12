@@ -1,0 +1,5 @@
+streamlit>=1.25
+Pillow
+ifcopenshell
+pdf2image
+Shapely
