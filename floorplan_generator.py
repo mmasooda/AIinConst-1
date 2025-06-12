@@ -4,7 +4,10 @@ import io
 import json
 import os
 from dataclasses import dataclass
-from typing import List
+
+from typing import List, Tuple
+
+import numpy as np
 from PIL import Image, ImageDraw
 import openai
 
@@ -20,6 +23,29 @@ class Room:
 class FloorPlan:
     rooms: List[Room]
 
+def extract_plot_metrics(
+    image: Image.Image,
+    unit: str = "meters",
+    pixels_per_unit: int = 100,
+) -> Tuple[float, float, float]:
+    """Return (width_m, height_m, area_m2) from an image mask."""
+
+    width_px, height_px = image.size
+    width = width_px / pixels_per_unit
+    height = height_px / pixels_per_unit
+
+    gray = image.convert("L")
+    arr = np.array(gray)
+    mask = arr < 250
+    area_px = mask.sum()
+    area = area_px / (pixels_per_unit ** 2)
+
+    if unit == "feet":
+        width *= 0.3048
+        height *= 0.3048
+        area *= 0.092903
+
+    return float(width), float(height), float(area)
 
 
 def generate_random_plan(plot_width: int = 20, plot_height: int = 20, num_rooms: int = 6) -> FloorPlan:
@@ -82,7 +108,8 @@ def generate_plan_with_openai(
 ) -> FloorPlan:
     """Use GPT-4o via OpenAI API to generate a floor plan."""
 
-    api_key = os.getenv("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")
+    api_key = os.getenv("OPENAI_API_KEY")
+
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
@@ -99,12 +126,16 @@ def generate_plan_with_openai(
         messages=[{"role": "user", "content": prompt}],
     )
     text = response["choices"][0]["message"]["content"].strip()
-    data = json.loads(text)
 
-    rooms = [
-        Room(r["x"], r["y"], r["width"], r["height"]) for r in data.get("rooms", [])
-    ]
-    return FloorPlan(rooms=rooms)
+    try:
+        data = json.loads(text)
+        rooms = [
+            Room(r["x"], r["y"], r["width"], r["height"]) for r in data.get("rooms", [])
+        ]
+        return FloorPlan(rooms=rooms)
+    except json.JSONDecodeError:
+        # fall back to a random plan when JSON is invalid
+        return generate_random_plan(plot_width, plot_height, num_rooms)
 
 
 def plan_to_image(plan: FloorPlan, cell_size: int = 40) -> Image:

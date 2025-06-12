@@ -1,7 +1,7 @@
 # AI Floorplan Assistant
 
 
-This project provides a simple web interface to upload a plot layout (image, PDF, or IFC). The app interacts with the user to collect design requirements, asks for plot dimensions, and generates basic floor plan options that respect the given size.
+This project provides a simple web interface to upload a plot layout (image, PDF, or IFC). The app interacts with the user to collect design requirements and automatically estimates plot dimensions from the uploaded image. If the image dimensions are in feet they are converted to meters. Several floor plan options respecting the detected size are produced.
 
 
 ## Features
@@ -10,7 +10,9 @@ This project provides a simple web interface to upload a plot layout (image, PDF
 
 - Choose building type: villa, hotel, office, apartment, or hostel.
 - Interactive questions adjust based on building type.
-- Display floor plan options generated to fit within the provided plot dimensions.
+- Display floor plan options generated to fit within the detected plot dimensions.
+- Automatically compute plot area from the image.
+- Provide five layout options and compile them into a downloadable PDF.
 - Optionally generate plans with GPT-4o via the OpenAI API for higher quality.
 - Download the generated plans as a single PDF file.
 

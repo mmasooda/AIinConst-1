@@ -4,14 +4,14 @@ from pdf2image import convert_from_path
 import ifcopenshell
 import io
 
-
 from floorplan_generator import (
     generate_random_plan,
     generate_plan_with_openai,
     plan_to_image,
     plans_to_pdf,
-)
 
+    extract_plot_metrics,
+)
 
 st.title("AI Floorplan Assistant")
 
@@ -43,12 +43,24 @@ if plot_image is not None:
     st.image(plot_image, caption="Plot layout", use_column_width=True)
 
 
+unit = st.selectbox("Units in plot image", ["meters", "feet"])
+pixels_per_unit = st.number_input("Pixels per unit", 10, 1000, 100)
+if plot_image is not None:
+    width_m, height_m, area_m2 = extract_plot_metrics(plot_image, unit, pixels_per_unit)
+else:
+    width_m = height_m = area_m2 = 0
+
+
 # Plot dimensions
 col1, col2 = st.columns(2)
 with col1:
-    plot_width = st.number_input("Plot width (m)", 5, 100, 20)
+
+    plot_width = st.number_input("Plot width (m)", min_value=1.0, value=float(width_m))
 with col2:
-    plot_height = st.number_input("Plot height (m)", 5, 100, 20)
+    plot_height = st.number_input("Plot height (m)", min_value=1.0, value=float(height_m))
+
+st.write(f"Estimated plot area: {area_m2:.2f} m²")
+
 
 # Step 1: building type
 building_type = st.selectbox(
@@ -94,17 +106,20 @@ else:  # office
 use_gpt = st.checkbox("Use GPT-4o for plan generation")
 
 if st.button("Generate floor plan options"):
-    # crude estimate of rooms based on building type inputs
+
+    # basic estimate of rooms influenced by plot area
+    base_rooms = max(4, int(area_m2 / 20))
     if building_type == "villa":
-        room_count = bedrooms + 2
+        room_count = base_rooms + bedrooms
     elif building_type == "hotel":
-        room_count = int(rooms_per_floor * 0.3)
+        room_count = max(base_rooms, int(rooms_per_floor * 0.3))
     elif building_type == "apartment":
-        room_count = units_per_floor
+        room_count = max(base_rooms, units_per_floor)
     elif building_type == "hostel":
-        room_count = int(rooms_per_floor * 0.5)
+        room_count = max(base_rooms, int(rooms_per_floor * 0.5))
     else:
-        room_count = 10
+        room_count = max(base_rooms, 10)
+
 
     if use_gpt:
         generator = lambda: generate_plan_with_openai(
@@ -113,7 +128,9 @@ if st.button("Generate floor plan options"):
     else:
         generator = lambda: generate_random_plan(plot_width, plot_height, room_count)
 
-    plans = [generator() for _ in range(3)]
+
+    plans = [generator() for _ in range(5)]
+
     images = []
     for idx, plan in enumerate(plans, 1):
         st.subheader(f"Option {idx}")
