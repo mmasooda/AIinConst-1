@@ -3,7 +3,6 @@
 
 This project provides a simple web interface to upload a plot layout (image, PDF, or IFC). The app interacts with the user to collect design requirements and automatically estimates plot dimensions from the uploaded image. If the image dimensions are in feet they are converted to meters. Several floor plan options respecting the detected size are produced.
 
-
 ## Features
 
 - Upload plot files in image (`.png`, `.jpg`), PDF, or IFC format.
@@ -41,4 +40,3 @@ streamlit run app.py
 
 
 This prototype is inspired by Finch3D/TestFit. By default it uses a basic recursive splitting algorithm so that rooms always fit inside the given plot. When `OPENAI_API_KEY` is supplied you can enable GPT-4o generation for higher-quality layouts. Additional logic would be required for production use.
-

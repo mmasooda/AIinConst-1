@@ -17,7 +17,9 @@ st.title("AI Floorplan Assistant")
 
 # File upload
 uploaded_file = st.file_uploader(
-    "Upload plot layout (image/PDF/IFC)",
+
+    label="Upload plot layout (image/PDF/IFC)",
+
     type=["png", "jpg", "jpeg", "pdf", "ifc"],
 )
 
@@ -46,18 +48,28 @@ if plot_image is not None:
 unit = st.selectbox("Units in plot image", ["meters", "feet"])
 pixels_per_unit = st.number_input("Pixels per unit", 10, 1000, 100)
 if plot_image is not None:
-    width_m, height_m, area_m2 = extract_plot_metrics(plot_image, unit, pixels_per_unit)
+    width_m, height_m, area_m2 = extract_plot_metrics(
+        plot_image, unit, pixels_per_unit
+    )
 else:
     width_m = height_m = area_m2 = 0
+
+# ensure defaults are valid for number_input
+default_width = width_m if width_m > 0 else 1.0
+default_height = height_m if height_m > 0 else 1.0
 
 
 # Plot dimensions
 col1, col2 = st.columns(2)
 with col1:
 
-    plot_width = st.number_input("Plot width (m)", min_value=1.0, value=float(width_m))
+    plot_width = st.number_input(
+        "Plot width (m)", min_value=1.0, value=float(default_width)
+    )
 with col2:
-    plot_height = st.number_input("Plot height (m)", min_value=1.0, value=float(height_m))
+    plot_height = st.number_input(
+        "Plot height (m)", min_value=1.0, value=float(default_height)
+    )
 
 st.write(f"Estimated plot area: {area_m2:.2f} m²")
 

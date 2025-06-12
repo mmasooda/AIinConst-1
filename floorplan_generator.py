@@ -23,6 +23,7 @@ class Room:
 class FloorPlan:
     rooms: List[Room]
 
+
 def extract_plot_metrics(
     image: Image.Image,
     unit: str = "meters",
