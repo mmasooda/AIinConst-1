@@ -1,4 +1,5 @@
 import random
+
 import io
 import json
 import os
@@ -6,6 +7,7 @@ from dataclasses import dataclass
 from typing import List
 from PIL import Image, ImageDraw
 import openai
+
 
 @dataclass
 class Room:
@@ -17,6 +19,7 @@ class Room:
 @dataclass
 class FloorPlan:
     rooms: List[Room]
+
 
 
 def generate_random_plan(plot_width: int = 20, plot_height: int = 20, num_rooms: int = 6) -> FloorPlan:

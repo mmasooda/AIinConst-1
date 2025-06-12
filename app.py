@@ -4,12 +4,14 @@ from pdf2image import convert_from_path
 import ifcopenshell
 import io
 
+
 from floorplan_generator import (
     generate_random_plan,
     generate_plan_with_openai,
     plan_to_image,
     plans_to_pdf,
 )
+
 
 st.title("AI Floorplan Assistant")
 
@@ -40,6 +42,7 @@ if uploaded_file is not None:
 if plot_image is not None:
     st.image(plot_image, caption="Plot layout", use_column_width=True)
 
+
 # Plot dimensions
 col1, col2 = st.columns(2)
 with col1:
@@ -51,6 +54,7 @@ with col2:
 building_type = st.selectbox(
     "What type of building?",
     ["villa", "hotel", "office", "apartment", "hostel"],
+
 )
 
 # Additional questions
@@ -65,6 +69,7 @@ elif building_type == "hotel":
         ("floors", floors),
         ("rooms_per_floor", rooms_per_floor),
     ])
+
 elif building_type == "apartment":
     bedrooms = st.number_input("Bedrooms per apartment", 1, 5, 2)
     units_per_floor = st.number_input("Apartments per floor", 1, 20, 4)
@@ -79,9 +84,11 @@ elif building_type == "hostel":
         ("floors", floors),
         ("rooms_per_floor", rooms_per_floor),
     ])
+
 else:  # office
     floors = st.number_input("Number of floors", 1, 50, 10)
     questions.append(("floors", floors))
+
 
 # Option to use GPT-4o via OpenAI API
 use_gpt = st.checkbox("Use GPT-4o for plan generation")
@@ -115,3 +122,4 @@ if st.button("Generate floor plan options"):
         st.image(image, caption=f"Plan {idx}", use_column_width=True)
     pdf_bytes = plans_to_pdf(plans)
     st.download_button("Download PDF", pdf_bytes, file_name="floorplans.pdf", mime="application/pdf")
+
