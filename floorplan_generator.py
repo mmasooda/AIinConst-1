@@ -1,13 +1,16 @@
 import random
+
 import io
 import json
 import os
 from dataclasses import dataclass
+
 from typing import List, Tuple
 
 import numpy as np
 from PIL import Image, ImageDraw
 import openai
+
 
 @dataclass
 class Room:
@@ -19,7 +22,6 @@ class Room:
 @dataclass
 class FloorPlan:
     rooms: List[Room]
-
 
 def extract_plot_metrics(
     image: Image.Image,
@@ -107,6 +109,7 @@ def generate_plan_with_openai(
     """Use GPT-4o via OpenAI API to generate a floor plan."""
 
     api_key = os.getenv("OPENAI_API_KEY")
+
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY environment variable not set")
 
@@ -123,6 +126,7 @@ def generate_plan_with_openai(
         messages=[{"role": "user", "content": prompt}],
     )
     text = response["choices"][0]["message"]["content"].strip()
+
     try:
         data = json.loads(text)
         rooms = [
